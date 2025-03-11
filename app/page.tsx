@@ -195,11 +195,59 @@ export default function Home() {
       const data = await res.json();
       setJsonAnalysis(data);
       setJsonProcessed(true);
+      
+      // Otomatik olarak JSON dosyasını indir
+      if (data?.analysis?.response) {
+        downloadJsonFile(data.analysis.response);
+      }
     } catch (error) {
       console.error("Error analyzing JSON:", error);
       setJsonAnalysis(null);
     } finally {
       setJsonLoading(false);
+    }
+  };
+
+  // JSON indirme işlemini ayrı bir fonksiyona çıkaralım
+  const downloadJsonFile = (jsonData: any) => {
+    try {
+      // Eğer string ise ve JSON formatında ise parse et
+      if (typeof jsonData === 'string') {
+        try {
+          // Bazen API yanıtı düz metin olarak JSON döndürebilir
+          jsonData = JSON.parse(jsonData);
+        } catch (e) {
+          // Parse edilemezse olduğu gibi kullan
+          console.log("JSON parse edilemedi, metin olarak kullanılıyor");
+        }
+      }
+      
+      // JSON'ı formatlı string'e dönüştür
+      const jsonString = JSON.stringify(jsonData, null, 2);
+      
+      // Dosya olarak indir
+      const blob = new Blob([jsonString], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "imza_sirküleri_analiz.json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("JSON indirme hatası:", error);
+      alert("JSON indirme sırasında bir hata oluştu.");
+    }
+  };
+
+  const handleDownloadJSON = () => {
+    if (jsonProcessed && jsonAnalysis?.analysis?.response) {
+      // Eğer JSON işlenmişse, indirme işlemini başlat
+      downloadJsonFile(jsonAnalysis.analysis.response);
+    } else if (!jsonProcessed) {
+      // Eğer JSON henüz işlenmediyse, analizi başlat
+      analyzeJsonData();
     }
   };
 
@@ -218,46 +266,6 @@ export default function Home() {
       }
     } catch (error) {
       console.error("Temizleme hatası:", error);
-    }
-  };
-
-  const handleDownloadJSON = () => {
-    if (jsonProcessed && jsonAnalysis?.analysis?.response) {
-      try {
-        // API yanıtından JSON string'i almaya çalış
-        let jsonData = jsonAnalysis.analysis.response;
-        
-        // Eğer string ise ve JSON formatında ise parse et
-        if (typeof jsonData === 'string') {
-          try {
-            // Bazen API yanıtı düz metin olarak JSON döndürebilir
-            jsonData = JSON.parse(jsonData);
-          } catch (e) {
-            // Parse edilemezse olduğu gibi kullan
-            console.log("JSON parse edilemedi, metin olarak kullanılıyor");
-          }
-        }
-        
-        // JSON'ı formatlı string'e dönüştür
-        const jsonString = JSON.stringify(jsonData, null, 2);
-        
-        // Dosya olarak indir
-        const blob = new Blob([jsonString], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "imza_sirküleri_analiz.json";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      } catch (error) {
-        console.error("JSON indirme hatası:", error);
-        alert("JSON indirme sırasında bir hata oluştu.");
-      }
-    } else if (!jsonProcessed) {
-      // Eğer JSON henüz işlenmediyse, analizi başlat
-      analyzeJsonData();
     }
   };
 
@@ -1036,7 +1044,7 @@ export default function Home() {
                     opacity: jsonLoading && !jsonProcessed ? 0.7 : 1,
                   }}
                 >
-                  {jsonLoading && !jsonProcessed ? "JSON İşleniyor..." : "JSON İndir"}
+                  {jsonLoading && !jsonProcessed ? "JSON İşleniyor..." : jsonProcessed ? "JSON Tekrar İndir" : "JSON İndir"}
                 </button>
               )}
             </div>

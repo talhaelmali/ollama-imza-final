@@ -5,8 +5,8 @@ import { Inter } from 'next/font/google';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Kubernetes Service Explorer',
-  description: 'View and manage Kubernetes services',
+  title: 'Garanti POC taslağı ',
+  description: 'Garanti Poc Taslak Çalışması',
 };
 
 export default function RootLayout({
